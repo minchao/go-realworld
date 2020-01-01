@@ -1,0 +1,16 @@
+linters:
+  enable:
+    - gofmt
+    - goimports
+    - golint
+    # Enabled by default, see https://github.com/golangci/golangci-lint#enabled-by-default-linters
+    - govet
+    - errcheck
+    - staticcheck
+    - unused
+    - gosimple
+    - structcheck
+    - varcheck
+    - ineffassign
+    - deadcode
+    - typecheck

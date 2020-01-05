@@ -2,7 +2,7 @@ SHELL := /bin/bash -o pipefail
 
 BUILD_VERSION ?= $(shell git describe --always)
 BUILD_COMMIT ?= $(shell git rev-parse HEAD)
-CMD_PACKAGE := github.com/minchao/go-realworld/pkg/adapter/ui/cmd
+CMD_PACKAGE := github.com/minchao/go-realworld/cmd/realworld/cmd
 
 .PHONY: help
 ## help: print this help message

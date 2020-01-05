@@ -7,5 +7,6 @@ import (
 )
 
 type TagUseCase interface {
+	Create(ctx context.Context, tag domain.Tag) error
 	FindAll(ctx context.Context) ([]domain.Tag, error)
 }

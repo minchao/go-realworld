@@ -19,3 +19,4 @@
 
 *.log
 /realworld
+/.realworld.yml

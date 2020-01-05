@@ -10,4 +10,5 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/gosimple/slug v1.9.0
 	github.com/spf13/cobra v0.0.5
+	github.com/spf13/viper v1.3.2
 )

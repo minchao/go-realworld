@@ -9,17 +9,18 @@ import (
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	"github.com/minchao/go-realworld/cmd/realworld/app"
 )
 
 const (
+	KeyServePort = "serve.port"
+
 	defaultServePort = 8080
 )
 
 var (
-	port int
-
 	serveCmd = &cobra.Command{
 		Use:   "serve",
 		Short: "Starts the server",
@@ -30,7 +31,9 @@ var (
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
-	serveCmd.Flags().IntVarP(&port, "port", "p", defaultServePort, "serve port")
+	serveCmd.Flags().Int("port", defaultServePort, "serve port")
+
+	_ = viper.BindPFlag(KeyServePort, serveCmd.Flags().Lookup("port"))
 }
 
 func serveRun(_ *cobra.Command, _ []string) error {
@@ -39,7 +42,7 @@ func serveRun(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	httpAddr := fmt.Sprintf(":%d", port)
+	httpAddr := fmt.Sprintf(":%d", viper.GetInt(KeyServePort))
 
 	// see https://github.com/gorilla/mux#graceful-shutdown
 	server := &http.Server{

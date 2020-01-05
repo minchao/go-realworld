@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
-	"syscall"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -17,6 +18,8 @@ const (
 )
 
 var (
+	port int
+
 	serveCmd = &cobra.Command{
 		Use:   "serve",
 		Short: "Starts the server",
@@ -27,7 +30,7 @@ var (
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
-	serveCmd.Flags().Int("port", defaultServePort, "serve port")
+	serveCmd.Flags().IntVarP(&port, "port", "p", defaultServePort, "serve port")
 }
 
 func serveRun(_ *cobra.Command, _ []string) error {
@@ -36,22 +39,37 @@ func serveRun(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	// TODO graceful shutdown
-	httpAddr := fmt.Sprintf(":%d", defaultServePort)
+	httpAddr := fmt.Sprintf(":%d", port)
 
-	errs := make(chan error)
-	go func() {
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
+	// see https://github.com/gorilla/mux#graceful-shutdown
+	server := &http.Server{
+		Handler:      kernel.Router,
+		Addr:         httpAddr,
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+		IdleTimeout:  60 * time.Second,
+	}
 
 	go func() {
 		_ = kernel.Logger.Log("transport", "HTTP", "addr", httpAddr)
-		errs <- http.ListenAndServe(httpAddr, kernel.Router)
+
+		if err := server.ListenAndServe(); err != nil {
+			_ = kernel.Logger.Log("terminated", err)
+		}
 	}()
 
-	_ = kernel.Logger.Log("exit", <-errs)
+	c := make(chan os.Signal, 1)
+	// We'll accept graceful shutdowns when quit via SIGINT (Ctrl+C)
+	// SIGKILL, SIGQUIT or SIGTERM (Ctrl+/) will not be caught.
+	signal.Notify(c, os.Interrupt)
 
+	// Block until we receive our signal.
+	<-c
+
+	// Create a deadline to wait for.
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+	_ = server.Shutdown(ctx)
+	_ = kernel.Logger.Log("terminated", "shutting down")
 	return nil
 }

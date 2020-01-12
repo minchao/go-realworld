@@ -1,9 +1,5 @@
 package memory
 
-import (
-	"github.com/minchao/go-realworld/pkg/application/article/port"
-)
-
 type Adapter struct {
 	articleRepository *ArticleRepository
 	tagRepository     *TagRepository
@@ -16,10 +12,10 @@ func NewAdapter() (*Adapter, error) {
 	}, nil
 }
 
-func (a *Adapter) Article() port.ArticleRepository {
+func (a *Adapter) Article() *ArticleRepository {
 	return a.articleRepository
 }
 
-func (a *Adapter) Tag() port.TagRepository {
+func (a *Adapter) Tag() *TagRepository {
 	return a.tagRepository
 }

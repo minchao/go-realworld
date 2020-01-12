@@ -25,7 +25,7 @@ func makeArticleServerEndpoints(s article.UseCase) ArticleEndpoints {
 		PostArticles:  makePostArticleEndpoint(s),
 		GetArticle:    makeGetArticleEndpoint(s),
 		PutArticle:    makePutArticleEndpoint(s),
-		DeleteArticle: nil,
+		DeleteArticle: makeDeleteArticleEndpoint(s),
 	}
 }
 
@@ -119,17 +119,13 @@ func makePostArticleEndpoint(service article.UseCase) endpoint.Endpoint {
 	}
 }
 
-type getArticleRequest struct {
-	Slug string
-}
-
 type getArticleResponse struct {
 	Article articleData `json:"article"`
 }
 
 func makeGetArticleEndpoint(s article.UseCase) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(getArticleRequest)
+		req := request.(articleSlugRequest)
 		a, err := s.Get(ctx, req.Slug)
 		if err != nil {
 			return nil, err
@@ -169,5 +165,17 @@ func makePutArticleEndpoint(s article.UseCase) endpoint.Endpoint {
 			return nil, err
 		}
 		return putArticleResponse{Article: transformArticle(*newArticle)}, nil
+	}
+}
+
+type deleteArticleResponse struct{}
+
+func makeDeleteArticleEndpoint(s article.UseCase) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(articleSlugRequest)
+		if err := s.Delete(ctx, req.Slug); err != nil {
+			return nil, err
+		}
+		return deleteArticleResponse{}, nil
 	}
 }

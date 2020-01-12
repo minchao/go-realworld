@@ -35,7 +35,7 @@ func InitArticleHandler(router *mux.Router, service article.UseCase, options []h
 
 	router.Methods("GET").Path("/articles/{slug}").Handler(httptransport.NewServer(
 		endpoints.GetArticle,
-		decodeGetArticleRequest,
+		decodeArticleSlugRequest,
 		EncodeResponse,
 		options...,
 	))
@@ -46,15 +46,26 @@ func InitArticleHandler(router *mux.Router, service article.UseCase, options []h
 		EncodeResponse,
 		options...,
 	))
+
+	router.Methods("DELETE").Path("/articles/{slug}").Handler(httptransport.NewServer(
+		endpoints.DeleteArticle,
+		decodeArticleSlugRequest,
+		EncodeResponse,
+		options...,
+	))
 }
 
-func decodeGetArticleRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
+type articleSlugRequest struct {
+	Slug string
+}
+
+func decodeArticleSlugRequest(_ context.Context, r *http.Request) (request interface{}, err error) {
 	vars := mux.Vars(r)
 	slug, ok := vars["slug"]
 	if !ok {
 		return nil, ErrSlugNotFound
 	}
-	return getArticleRequest{Slug: slug}, nil
+	return articleSlugRequest{Slug: slug}, nil
 }
 
 func decodePostArticlesRequest(_ context.Context, r *http.Request) (request interface{}, err error) {

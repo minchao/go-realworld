@@ -23,7 +23,7 @@ func NewArticleService(articleRepo port.ArticleRepository, tagService port.Creat
 	}
 }
 
-type CreateArticleOptions struct {
+type CreationData struct {
 	Title       string
 	Description string
 	Body        string
@@ -31,30 +31,27 @@ type CreateArticleOptions struct {
 	Author      userDomain.User
 }
 
-func (s *Service) Create(ctx context.Context, options CreateArticleOptions) (*domain.Article, error) {
+func (s *Service) Create(ctx context.Context, data CreationData) (*domain.Article, error) {
 	now := time.Now()
 	newArticle := &domain.Article{
-		Slug:           slug.Make(options.Title),
-		Title:          options.Title,
-		Description:    options.Description,
-		Body:           options.Body,
+		Slug:           slug.Make(data.Title),
+		Title:          data.Title,
+		Description:    data.Description,
+		Body:           data.Body,
 		TagList:        []domain.Tag{},
 		CreatedAt:      now,
 		UpdatedAt:      now,
 		Favorited:      false,
 		FavoritesCount: 0,
-		Author:         options.Author,
+		Author:         data.Author,
 	}
-	for _, v := range options.TagList {
+	for _, v := range data.TagList {
 		tag := domain.Tag(v)
 		newArticle.AddTag(tag)
 		_ = s.tagService.Create(ctx, tag)
 	}
 
-	if err := s.articleRepository.Save(ctx, newArticle); err != nil {
-		return nil, err
-	}
-	return newArticle, nil
+	return newArticle, s.articleRepository.Save(ctx, newArticle)
 }
 
 func (s *Service) Get(ctx context.Context, slug string) (*domain.Article, error) {
@@ -65,8 +62,31 @@ func (s *Service) GetAll(ctx context.Context, criteria domain.ArticleCriteria) (
 	return s.articleRepository.FindBy(ctx, criteria)
 }
 
-func (s *Service) Update(ctx context.Context, article *domain.Article) error {
-	return s.articleRepository.Save(ctx, article)
+type MutationData struct {
+	Title       *string
+	Description *string
+	Body        *string
+}
+
+func (s *Service) Update(ctx context.Context, slug string, data MutationData) (*domain.Article, error) {
+	article, err := s.articleRepository.Find(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	if data.Title != nil {
+		article.Title = *data.Title
+	}
+	if data.Description != nil {
+		article.Description = *data.Description
+	}
+	if data.Body != nil {
+		article.Body = *data.Body
+	}
+
+	article.UpdatedAt = time.Now()
+
+	return article, s.articleRepository.Save(ctx, article)
 }
 
 func (s *Service) Delete(ctx context.Context, slug string) error {

@@ -13,8 +13,8 @@ import (
 
 type ArticleEndpoints struct {
 	GetArticles   endpoint.Endpoint
+	PostArticles  endpoint.Endpoint
 	GetArticle    endpoint.Endpoint
-	PostArticle   endpoint.Endpoint
 	PutArticle    endpoint.Endpoint
 	DeleteArticle endpoint.Endpoint
 }
@@ -22,9 +22,9 @@ type ArticleEndpoints struct {
 func makeArticleServerEndpoints(s article.UseCase) ArticleEndpoints {
 	return ArticleEndpoints{
 		GetArticles:   makeGetArticlesEndpoint(s),
+		PostArticles:  makePostArticleEndpoint(s),
 		GetArticle:    makeGetArticleEndpoint(s),
-		PostArticle:   makePostArticleEndpoint(s),
-		PutArticle:    nil,
+		PutArticle:    makePutArticleEndpoint(s),
 		DeleteArticle: nil,
 	}
 }
@@ -83,6 +83,42 @@ func makeGetArticlesEndpoint(s article.UseCase) endpoint.Endpoint {
 	}
 }
 
+type postArticle struct {
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Body        string   `json:"body"`
+	TagList     []string `json:"tagList"`
+}
+
+type postArticleRequest struct {
+	Article postArticle `json:"article"`
+}
+
+func (r postArticleRequest) toArticleCreationData(user userDomain.User) article.CreationData {
+	return article.CreationData{
+		Title:       r.Article.Title,
+		Description: r.Article.Description,
+		Body:        r.Article.Body,
+		TagList:     r.Article.TagList,
+		Author:      user,
+	}
+}
+
+type postArticleResponse struct {
+	Article articleData `json:"article"`
+}
+
+func makePostArticleEndpoint(service article.UseCase) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
+		req := request.(postArticleRequest)
+		newArticle, err := service.Create(ctx, req.toArticleCreationData(userDomain.User{}))
+		if err != nil {
+			return nil, err
+		}
+		return postArticleResponse{Article: transformArticle(*newArticle)}, nil
+	}
+}
+
 type getArticleRequest struct {
 	Slug string
 }
@@ -102,36 +138,36 @@ func makeGetArticleEndpoint(s article.UseCase) endpoint.Endpoint {
 	}
 }
 
-type articleOptions struct {
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Body        string   `json:"body"`
-	TagList     []string `json:"tagList"`
+type putArticle struct {
+	Title       *string `json:"title"`
+	Description *string `json:"description"`
+	Body        *string `json:"body"`
 }
 
-type postArticleRequest struct {
-	Article articleOptions `json:"article"`
+type putArticleRequest struct {
+	Slug    string     `json:"-"`
+	Article putArticle `json:"article"`
 }
 
-type postArticleResponse struct {
+func (r putArticleRequest) toArticleMutationData() article.MutationData {
+	return article.MutationData{
+		Title:       r.Article.Title,
+		Description: r.Article.Description,
+		Body:        r.Article.Body,
+	}
+}
+
+type putArticleResponse struct {
 	Article articleData `json:"article"`
 }
 
-func makePostArticleEndpoint(service article.UseCase) endpoint.Endpoint {
+func makePutArticleEndpoint(s article.UseCase) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(postArticleRequest)
-		options := article.CreateArticleOptions{
-			Title:       req.Article.Title,
-			Description: req.Article.Description,
-			Body:        req.Article.Body,
-			TagList:     req.Article.TagList,
-			Author:      userDomain.User{},
-		}
-
-		newArticle, err := service.Create(ctx, options)
+		req := request.(putArticleRequest)
+		newArticle, err := s.Update(ctx, req.Slug, req.toArticleMutationData())
 		if err != nil {
 			return nil, err
 		}
-		return postArticleResponse{Article: transformArticle(*newArticle)}, nil
+		return putArticleResponse{Article: transformArticle(*newArticle)}, nil
 	}
 }

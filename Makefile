@@ -31,3 +31,9 @@ build:
 	go build \
 		-ldflags "-s -X $(CMD_PACKAGE).Version=$(BUILD_VERSION) -X $(CMD_PACKAGE).Date=`TZ=UTC date -u '+%Y-%m-%dT%H:%M:%SZ'` -X $(CMD_PACKAGE).Commit=$(BUILD_COMMIT)" \
 		./cmd/realworld
+
+.PHONY: e2e
+## e2e: end-to-end testing
+e2e:
+	newman run api/Conduit.postman_collection.json \
+		-e api/e2e.postman_environment.json

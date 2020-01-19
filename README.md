@@ -8,9 +8,18 @@ A hexagonal architecture implementation of the realworld example app
 
 ### System requirements
 
+- [Git](https://git-scm.com/)
 - [Go 1.13+](https://golang.org/)
 - [Make](https://www.gnu.org/software/make/)
 - [Docker](https://www.docker.com/) (optional)
+
+### Build
+
+Build realworld app:
+
+```bash
+$ make build
+```
 
 ### Build Docker
 

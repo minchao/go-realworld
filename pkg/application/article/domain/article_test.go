@@ -6,14 +6,19 @@ import (
 	qt "github.com/frankban/quicktest"
 )
 
-func TestArticle_AddTag(t *testing.T) {
+func TestArticle_CreateArticle(t *testing.T) {
 	c := qt.New(t)
 
 	article := Article{}
+
 	c.Assert(article.TagList, qt.DeepEquals, []Tag(nil))
+}
+
+func TestArticle_AddTag(t *testing.T) {
+	c := qt.New(t)
+	article := Article{}
 
 	article.AddTag("foo")
+
 	c.Assert(article.TagList, qt.DeepEquals, []Tag{"foo"})
-	article.AddTag("bar")
-	c.Assert(article.TagList, qt.DeepEquals, []Tag{"foo", "bar"})
 }

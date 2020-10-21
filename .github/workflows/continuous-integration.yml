@@ -19,7 +19,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
       - name: Install golangci-lint
-        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.22.2
+        run: curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.31.0
       - name: Run golangci-lit
         run: ./bin/golangci-lint run
   test:

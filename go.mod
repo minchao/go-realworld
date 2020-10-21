@@ -1,6 +1,6 @@
 module github.com/minchao/go-realworld
 
-go 1.13
+go 1.15
 
 require (
 	github.com/frankban/quicktest v1.7.2

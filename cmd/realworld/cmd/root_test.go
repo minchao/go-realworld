@@ -41,7 +41,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	c.Run("config", func(c *qt.C) {
-		dir := c.Mkdir()
+		dir := c.TempDir()
 		cfgStr := `
 test:
   port: 8081

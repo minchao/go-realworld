@@ -51,6 +51,7 @@ jobs:
         run: ./realworld --version
   docker:
     name: Build Docker image
+    needs: [ lint, test, build ]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
